@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Contador de Interrupções de Aula</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --card-soft: #f8fafc;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #020617;
+                --card: #0f172a;
+                --card-soft: #111827;
+                --text: #e2e8f0;
+                --muted: #94a3b8;
+                --border: #1e293b;
+                --accent: #818cf8;
+                --accent-hover: #6366f1;
+                --danger: #f87171;
+                --danger-hover: #ef4444;
+                --shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .app {
+            width: min(100%, 620px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1.5rem;
+            background: var(--accent);
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.35rem;
+        }
+
+        .header p {
+            margin: 0.35rem 0 0;
+            opacity: 0.88;
+            font-size: 0.95rem;
+        }
+
+        .content {
+            padding: 1.5rem;
+        }
+
+        .counter-wrap {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .counter-wrap p {
+            margin: 0 0 0.5rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .counter {
+            font-size: clamp(4rem, 12vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .status-card {
+            background: var(--card-soft);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-card h2 {
+            margin: 0 0 0.4rem;
+            font-size: 1rem;
+        }
+
+        .status-line {
+            margin: 0.2rem 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .timer {
+            display: inline-block;
+            margin-top: 0.8rem;
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--accent);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 0.95rem 1rem;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .button-danger {
+            background: var(--danger);
+            color: #ffffff;
+        }
+
+        .button-danger:hover:not(:disabled) {
+            background: var(--danger-hover);
+        }
+
+        .button-secondary {
+            background: var(--card-soft);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0 0 1rem;
+            font-size: 1rem;
+        }
+
+        .section-title span {
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .history {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.2rem;
+        }
+
+        .history-item {
+            background: var(--card-soft);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 0.95rem 1rem;
+        }
+
+        .history-item strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.95rem;
+        }
+
+        .history-item p {
+            margin: 0.15rem 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--muted);
+            padding: 1rem;
+            border: 1px dashed var(--border);
+            border-radius: 18px;
+            background: var(--card-soft);
+        }
+
+        @media (max-width: 560px) {
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <header class="header">
+            <h1>Contador de Aula</h1>
+            <p>Conte interrupções e exporte depois em CSV.</p>
+        </header>
+
+        <section class="content">
+            <div class="counter-wrap">
+                <p>Interrupções registradas</p>
+                <div id="counter-display" class="counter">0</div>
+            </div>
+
+            <div class="status-card">
+                <h2 id="status-title">Nenhuma interrupção em andamento</h2>
+                <p id="status-start" class="status-line">Clique em "Iniciar interrupção" quando começar.</p>
+                <p id="status-end" class="status-line"></p>
+                <div id="active-timer" class="timer">00:00:00</div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-toggle" class="button-primary">Iniciar interrupção</button>
+                <button id="btn-remove-last" class="button-secondary">Remover última</button>
+                <button id="btn-export-csv" class="button-secondary">Gerar CSV</button>
+                <button id="btn-reset" class="button-danger">Zerar tudo</button>
+            </div>
+
+            <h2 class="section-title">
+                Histórico
+                <span id="history-count">0 registros</span>
+            </h2>
+
+            <div id="history-log" class="history">
+                <div class="empty">Nenhuma interrupção registrada ainda.</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const state = {
+            activeInterruption: null,
+            interruptions: []
+        };
+
+        const elements = {
+            counterDisplay: document.getElementById("counter-display"),
+            statusTitle: document.getElementById("status-title"),
+            statusStart: document.getElementById("status-start"),
+            statusEnd: document.getElementById("status-end"),
+            activeTimer: document.getElementById("active-timer"),
+            historyCount: document.getElementById("history-count"),
+            historyLog: document.getElementById("history-log"),
+            btnToggle: document.getElementById("btn-toggle"),
+            btnRemoveLast: document.getElementById("btn-remove-last"),
+            btnExportCsv: document.getElementById("btn-export-csv"),
+            btnReset: document.getElementById("btn-reset")
+        };
+
+        function formatDateTime(value) {
+            return new Intl.DateTimeFormat("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "medium"
+            }).format(new Date(value));
+        }
+
+        function formatDuration(milliseconds) {
+            const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+            const seconds = String(totalSeconds % 60).padStart(2, "0");
+            return hours + ":" + minutes + ":" + seconds;
+        }
+
+        function formatMinutes(milliseconds) {
+            return new Intl.NumberFormat("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(milliseconds / 60000);
+        }
+
+        function formatTimestampForFile(date) {
+            const pad = (value) => String(value).padStart(2, "0");
+            return [
+                date.getFullYear(),
+                pad(date.getMonth() + 1),
+                pad(date.getDate())
+            ].join("-") + "_" + [
+                pad(date.getHours()),
+                pad(date.getMinutes()),
+                pad(date.getSeconds())
+            ].join("-");
+        }
+
+        function escapeCsvValue(value) {
+            const text = String(value).replace(/"/g, "\"\"");
+            return "\"" + text + "\"";
+        }
+
+        function getActiveDuration() {
+            if (!state.activeInterruption) {
+                return 0;
+            }
+
+            return Date.now() - new Date(state.activeInterruption.startedAt).getTime();
+        }
+
+        function renderCounter() {
+            elements.counterDisplay.textContent = String(state.interruptions.length);
+            elements.historyCount.textContent =
+                state.interruptions.length + " registro" + (state.interruptions.length === 1 ? "" : "s");
+        }
+
+        function renderStatus() {
+            if (state.activeInterruption) {
+                elements.statusTitle.textContent = "Interrupção em andamento";
+                elements.statusStart.textContent = "Início: " + formatDateTime(state.activeInterruption.startedAt);
+                elements.statusEnd.textContent = "Fim: aguardando encerramento";
+                elements.activeTimer.textContent = formatDuration(getActiveDuration());
+                elements.btnToggle.textContent = "Encerrar interrupção";
+                return;
+            }
+
+            elements.statusTitle.textContent = "Nenhuma interrupção em andamento";
+            elements.statusStart.textContent = "Clique em \"Iniciar interrupção\" quando começar.";
+            elements.statusEnd.textContent = "";
+            elements.activeTimer.textContent = "00:00:00";
+            elements.btnToggle.textContent = "Iniciar interrupção";
+        }
+
+        function renderHistory() {
+            if (!state.interruptions.length) {
+                elements.historyLog.innerHTML = "<div class=\"empty\">Nenhuma interrupção registrada ainda.</div>";
+                return;
+            }
+
+            const items = state.interruptions.slice().reverse().map((entry, index) => {
+                const number = state.interruptions.length - index;
+
+                return [
+                    "<div class=\"history-item\">",
+                    "<strong>Interrupção " + number + "</strong>",
+                    "<p>Início: " + formatDateTime(entry.startedAt) + "</p>",
+                    "<p>Fim: " + formatDateTime(entry.endedAt) + "</p>",
+                    "<p>Duração: " + formatDuration(entry.durationMs) + " (" + formatMinutes(entry.durationMs) + " min)</p>",
+                    "</div>"
+                ].join("");
+            });
+
+            elements.historyLog.innerHTML = items.join("");
+        }
+
+        function render() {
+            renderCounter();
+            renderStatus();
+            renderHistory();
+            elements.btnRemoveLast.disabled = !state.activeInterruption && state.interruptions.length === 0;
+            elements.btnExportCsv.disabled = state.interruptions.length === 0;
+        }
+
+        function startInterruption() {
+            if (state.activeInterruption) {
+                return;
+            }
+
+            state.activeInterruption = {
+                startedAt: new Date().toISOString()
+            };
+
+            render();
+        }
+
+        function finishInterruption() {
+            if (!state.activeInterruption) {
+                return;
+            }
+
+            const endedAt = new Date();
+            const startedAt = new Date(state.activeInterruption.startedAt);
+            const durationMs = Math.max(endedAt.getTime() - startedAt.getTime(), 0);
+
+            state.interruptions.push({
+                startedAt: state.activeInterruption.startedAt,
+                endedAt: endedAt.toISOString(),
+                durationMs: durationMs
+            });
+
+            state.activeInterruption = null;
+            render();
+        }
+
+        function removeLast() {
+            if (state.activeInterruption) {
+                const shouldCancel = confirm("Cancelar a interrupção em andamento?");
+
+                if (!shouldCancel) {
+                    return;
+                }
+
+                state.activeInterruption = null;
+                render();
+                return;
+            }
+
+            if (!state.interruptions.length) {
+                return;
+            }
+
+            const shouldRemove = confirm("Remover a última interrupção registrada?");
+
+            if (!shouldRemove) {
+                return;
+            }
+
+            state.interruptions.pop();
+            render();
+        }
+
+        function resetAll() {
+            const shouldReset = confirm("Deseja zerar o contador e o histórico?");
+
+            if (!shouldReset) {
+                return;
+            }
+
+            state.activeInterruption = null;
+            state.interruptions = [];
+            render();
+        }
+
+        function exportCsv() {
+            if (!state.interruptions.length) {
+                alert("Não há dados para exportar.");
+                return;
+            }
+
+            const lines = [
+                "inicio,fim,duracao_hh_mm_ss,duracao_minutos"
+            ];
+
+            state.interruptions.forEach((entry) => {
+                lines.push([
+                    escapeCsvValue(formatDateTime(entry.startedAt)),
+                    escapeCsvValue(formatDateTime(entry.endedAt)),
+                    escapeCsvValue(formatDuration(entry.durationMs)),
+                    escapeCsvValue(formatMinutes(entry.durationMs))
+                ].join(","));
+            });
+
+            const csv = lines.join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = "interrupcoes-" + formatTimestampForFile(new Date()) + ".csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        elements.btnToggle.addEventListener("click", () => {
+            if (state.activeInterruption) {
+                finishInterruption();
+                return;
+            }
+
+            startInterruption();
+        });
+
+        elements.btnRemoveLast.addEventListener("click", removeLast);
+        elements.btnExportCsv.addEventListener("click", exportCsv);
+        elements.btnReset.addEventListener("click", resetAll);
+
+        setInterval(() => {
+            if (state.activeInterruption) {
+                renderStatus();
+            }
+        }, 1000);
+
+        render();
+    </script>
+</body>
+</html>
